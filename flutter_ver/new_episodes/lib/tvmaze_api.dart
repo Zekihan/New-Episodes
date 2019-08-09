@@ -1,6 +1,5 @@
 import 'package:new_episodes/network.dart';
 import 'dart:convert';
-import 'imdb.dart';
 
 class TVMaze{
 
