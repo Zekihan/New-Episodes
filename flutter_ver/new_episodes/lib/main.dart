@@ -139,6 +139,12 @@ class _MyHomePageState extends State<MyHomePage> {
       if (list.isNotEmpty){
         List<String> x = new List<String>(3);
         x[1] = list[3];
+        if(list[1].length == 1){
+          list[1] = "0"+list[1];
+        }
+        if(list[2].length == 1){
+          list[2] = "0"+list[2 ];
+        }
         x[0] = list[0]+" S"+list[1]+"E"+list[2];
         x[2] = s;
         setState(() {

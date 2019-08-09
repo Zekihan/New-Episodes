@@ -1,5 +1,6 @@
 import 'package:new_episodes/network.dart';
 import 'dart:convert';
+import 'imdb.dart';
 
 class TVMaze{
 
@@ -38,10 +39,21 @@ class TVMaze{
         return response;
     }
   }
+  static Future<String> showSearch(String query) async {
+    String url;
+    String response;
+
+    url = _rootUrl + "/singlesearch/shows?q=" + query;
+    response = await Network.getHtml(url);
+
+
+    return response;
+  }
   static Future<List<String>> getNextEpisodeByImdbTitle(String query) async {
+    List<String> result = new List<String>();
+    String show;
     try{
-      List<String> result = new List<String>();
-      String show = await showLookup(query,TVMaze.IMDB);
+      show = await showLookup(query,TVMaze.IMDB);
       var showJson = json.decode(show);
       result.add(showJson["name"].toString());
       String episodeUrl = showJson["_links"]["nextepisode"]["href"];
@@ -51,7 +63,14 @@ class TVMaze{
       result.add(episodeJson["number"].toString());
       result.add(episodeJson["airdate"].toString());
       return result;
-    }catch(exception){
+    }on NoSuchMethodError catch(e) {
+      return new List<String>();
+    }
+    on FormatException catch(e) {
+      print(query+" cannot found.");
+      return new List<String>();
+    }
+    catch(exception){
       print(exception);
       return new List<String>();
     }

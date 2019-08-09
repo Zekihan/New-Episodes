@@ -19,6 +19,16 @@ class ImdbParser {
     titles = strings;
     return titles;
   }
+  static Future<String> getTitle(String url,String tt) async {
+
+    String listId = await Network.getHtml(url);
+    listId = listId.split("pageId")[1].substring(11,22);
+    String html = await Network.getHtml("https://www.imdb.com/list/" + listId + "/export");
+    String result = "";
+    result = html.split(tt)[1].split(",")[4];
+
+    return result;
+  }
   static void getWatchListGenre(String url) async {
 
     String listId = await Network.getHtml(url);
