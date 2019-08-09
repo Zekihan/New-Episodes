@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:new_episodes/imdb.dart';
 import 'package:new_episodes/tvmaze_api.dart';
 import 'package:new_episodes/new_episodes_list_view.dart';
+import 'package:new_episodes/genre_list_view.dart';
 
 
 void main() => runApp(MyApp());
@@ -66,15 +67,22 @@ class RecommendationPage extends StatefulWidget {
 }
 class _RecommendationPageState extends State<RecommendationPage> {
 
-  List<List<String>> _newEpisodeList = new List<List<String>>();
+  List<List> _likes = new List<List<String>>();
 
   @override
   void initState() {
     super.initState();
+    _test();
   }
 
-  void _test(){
-    ImdbParser.getWatchListGenre("https://www.imdb.com/user/ur102224939/watchlist?ref_=nv_wl_all_0");
+  Future _test() async {
+    setState(() {
+      _likes = _likes;
+    });
+    _likes = await ImdbParser.getWatchListGenre("https://www.imdb.com/user/ur102224939/watchlist?ref_=nv_wl_all_0");
+    setState(() {
+      _likes = _likes;
+    });
   }
 
   @override
@@ -87,15 +95,10 @@ class _RecommendationPageState extends State<RecommendationPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Expanded(child: ListOfEpisodes(_newEpisodeList)),
+            Expanded(child: Genres(_likes)),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _test,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

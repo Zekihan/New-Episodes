@@ -29,7 +29,7 @@ class ImdbParser {
 
     return result;
   }
-  static void getWatchListGenre(String url) async {
+  static Future<List<List>> getWatchListGenre(String url) async {
 
     String listId = await Network.getHtml(url);
     listId = listId.split("pageId")[1].substring(11,22);
@@ -71,6 +71,7 @@ class ImdbParser {
     }
     likes.sort((a, b) => comparatorReverse(a[1],b[1]));
     print(likes);
+    return likes;
   }
   static int comparatorReverse(int a,int b){
     int normal = a.compareTo(b);
