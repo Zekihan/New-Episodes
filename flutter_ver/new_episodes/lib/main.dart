@@ -1,8 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:new_episodes/imdb.dart';
 import 'package:new_episodes/tvmaze_api.dart';
 import 'package:new_episodes/new_episodes_list_view.dart';
 import 'package:new_episodes/genre_list_view.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 
 void main() => runApp(MyApp());
@@ -16,12 +19,90 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: FirstRoute(),
+      home: FirstRoutePage(),
     );
   }
 }
 
-class FirstRoute extends StatelessWidget {
+class FirstRoutePage extends StatefulWidget {
+
+  @override
+  _FirstRoutePageState createState() => _FirstRoutePageState();
+}
+
+class _FirstRoutePageState extends State<FirstRoutePage> {
+
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
+  @override
+  initState() {
+    super.initState();
+
+    var initializationSettingsAndroid =
+    new AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsIOS = new IOSInitializationSettings();
+    var initializationSettings = new InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onSelectNotification: onSelectNotification);
+  }
+
+  Future onSelectNotification(String payload) async {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return new AlertDialog(
+          title: Text("PayLoad"),
+          content: Text("Payload : $payload"),
+        );
+      },
+    );
+  }
+
+  Future _showNotification() async {
+    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+        '0', 'your channel name', 'your channel description',
+        importance: Importance.Max, priority: Priority.High);
+    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+    var platformChannelSpecifics = new NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'New Post',
+      'How to Show Notification in Flutter',
+      platformChannelSpecifics,
+      payload: 'Default_Sound',
+    );
+  }
+  Future<void> _scheduleNotification() async {
+    var scheduledNotificationDateTime =
+    DateTime.now().add(Duration(minutes: 15));
+
+    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+        '0', 'your channel name', 'your channel description',
+        playSound: false,
+        importance: Importance.Max, priority: Priority.High);
+    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+    var platformChannelSpecifics = new NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'New Post',
+      'How to Show Notification in Flutter',
+      platformChannelSpecifics,
+    );
+
+    await flutterLocalNotificationsPlugin.schedule(
+        0,
+        'scheduled title',
+        'scheduled body',
+        scheduledNotificationDateTime,
+        platformChannelSpecifics);
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,8 +134,17 @@ class FirstRoute extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showNotification();
+          _scheduleNotification();
+        },
+        child: Icon(Icons.thumb_up),
+        backgroundColor: Colors.pink,
+      ),
     );
   }
+
 }
 
 class RecommendationPage extends StatefulWidget {
