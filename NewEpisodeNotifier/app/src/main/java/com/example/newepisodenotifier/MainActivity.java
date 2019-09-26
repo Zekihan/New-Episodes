@@ -1,15 +1,10 @@
 package com.example.newepisodenotifier;
 
-import android.content.ComponentName;
+
 import android.content.Context;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.customtabs.CustomTabsCallback;
-import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsIntent;
-import android.support.customtabs.CustomTabsServiceConnection;
-import android.support.customtabs.CustomTabsSession;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
@@ -27,26 +22,13 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Context mContext;
+
     private MonthlyMenuCustomAdapter adapter;
-
-
-
-    private CustomTabsIntent.Builder intentBuilder;
-    private CustomTabsSession tabsSession;
-    private CustomTabsServiceConnection tabsConnection;
-
     private Calendar calendar;
-
-    private void chromeTab(String url, Context context){
-        CustomTabsIntent customTabsIntent = intentBuilder.build();
-        customTabsIntent.launchUrl(context, Uri.parse(url));
-    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(tabsConnection);
     }
 
     @Override
@@ -56,66 +38,42 @@ public class MainActivity extends AppCompatActivity {
 
         final List<String[]> listOfTitles = new ArrayList<>();
         final List<String[]> progress = new ArrayList<>();
-        mContext = this;
 
-        tabsConnection = new CustomTabsServiceConnection() {
-            @Override
-            public void onCustomTabsServiceConnected(ComponentName componentName, CustomTabsClient customTabsClient) {
-                customTabsClient.warmup(1);
-                CustomTabsCallback customTabsCallback = new CustomTabsCallback();
-                tabsSession = customTabsClient.newSession(customTabsCallback);
-
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-
-            }
-        };
-        CustomTabsClient.bindCustomTabsService(this,"custom.tabs", tabsConnection);
-        intentBuilder = new CustomTabsIntent.Builder(tabsSession);
-        intentBuilder.setStartAnimations(this,android.R.anim.slide_in_left , android.R.anim.slide_out_right);
-        intentBuilder.setExitAnimations(this, android.R.anim.slide_in_left,
-                android.R.anim.slide_out_right);
-        intentBuilder.setToolbarColor(Color.parseColor("#3949AB"));
 
 
         calendar = Calendar.getInstance();
 
         final RecyclerView recyclerView = findViewById(R.id.rv);
-        adapter = new MonthlyMenuCustomAdapter(listOfTitles);
+        adapter = new MonthlyMenuCustomAdapter(progress);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
-        recyclerView.addOnItemTouchListener(new RecyclerTouchListener(mContext, recyclerView, new RecyclerTouchListener.ClickListener() {
+        recyclerView.addOnItemTouchListener(new RecyclerTouchListener(this, recyclerView, new RecyclerTouchListener.ClickListener() {
             @Override
             public void onClick(View view, int position) {
                 try{
                     TextView tv = recyclerView.getChildAt(position).findViewById(R.id.urlInfo);
                     String s = (tv.getText().toString());
                     if(!s.equals("")){
-                        chromeTab("https://www.imdb.com/title/"+s+"/episodes?ref_=tt_ov_epl",mContext);
+                        chromeTab("https://www.imdb.com/title/"+s+"/episodes?ref_=tt_ov_epl");
                     }
                 }catch (Exception e){
                     Log.e("tag",e.getMessage());
                     e.printStackTrace();
                 }
-
             }
 
             @Override
-            public void onLongClick(View view, int position) {
+            public void onLongClick(View view, int position) { }
 
-            }
         }));
         String[] x = new String[3];
         x[0] = "Progress "+"0/??";
         x[1] = getStringFromCalender(calendar);
         x[2] = "";
         progress.add(x);
-        adapter = new MonthlyMenuCustomAdapter(progress);
-        recyclerView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
 
         final Thread t1 = new Thread(new Runnable() {
             @Override
@@ -132,13 +90,11 @@ public class MainActivity extends AppCompatActivity {
                         x[2] = "";
                         progress.remove(0);
                         progress.add(x);
-                        adapter = new MonthlyMenuCustomAdapter(progress);
-                        recyclerView.setAdapter(adapter);
+                        adapter.notifyDataSetChanged();
                     }
                 });
                 int count = 1;
-                for (String s:titles
-                     ) {
+                for (String s:titles) {
                     final String url = "https://www.imdb.com/title/" + s;
                     List<String> list = ImdbParser.getLastSeasonEpisodeList(url);
                     if (!list.isEmpty()){
@@ -155,26 +111,23 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void run() {
-                            List<String[]> progress;
                             if(finalCount == titles.length){
-                                progress = new ArrayList<>(listOfTitles);
-                                adapter = new MonthlyMenuCustomAdapter(progress);
-                                recyclerView.setAdapter(adapter);
+                                progress.clear();
+                                progress.addAll(listOfTitles);
+                                adapter.notifyDataSetChanged();
                             }else {
                                 String[] x = new String[3];
                                 x[0] = "Progress "+finalCount +"/"+titles.length;
                                 x[1] = getStringFromCalender(calendar);
                                 x[2] = "";
-                                progress = new ArrayList<>();
+                                progress.clear();
                                 progress.add(x);
                                 progress.addAll(listOfTitles);
-                                adapter = new MonthlyMenuCustomAdapter(progress);
-                                recyclerView.setAdapter(adapter);
+                                adapter.notifyDataSetChanged();
                             }
                         }
                     });
                     count++;
-
                 }
                 Log.e("timer","took :"+(Calendar.getInstance().getTimeInMillis()-start));
             }
@@ -196,8 +149,7 @@ public class MainActivity extends AppCompatActivity {
                         x[2] = "";
                         progress.remove(0);
                         progress.add(x);
-                        adapter = new MonthlyMenuCustomAdapter(progress);
-                        recyclerView.setAdapter(adapter);
+                        adapter.notifyDataSetChanged();
                     }
                 });
                 int count = 1;
@@ -217,9 +169,9 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void run() {
-                            List<String[]> progress;
                             if(finalCount == titles.length){
-                                progress = new ArrayList<>(listOfTitles);
+                                progress.clear();
+                                progress.addAll(listOfTitles);
                                 Collections.sort(progress, new Comparator<String[]>() {
                                     @Override
                                     public int compare(String[] o1, String[] o2) {
@@ -228,14 +180,13 @@ public class MainActivity extends AppCompatActivity {
                                         return c1.compareTo(c2);
                                     }
                                 });
-                                adapter = new MonthlyMenuCustomAdapter(progress);
-                                recyclerView.setAdapter(adapter);
+                                adapter.notifyDataSetChanged();
                             }else {
                                 String[] x = new String[3];
                                 x[0] = "Progress "+finalCount +"/"+titles.length;
                                 x[1] = getStringFromCalender(calendar);
                                 x[2] = "";
-                                progress = new ArrayList<>();
+                                progress.clear();
                                 progress.add(x);
                                 progress.addAll(listOfTitles);
                                 Collections.sort(progress, new Comparator<String[]>() {
@@ -246,19 +197,16 @@ public class MainActivity extends AppCompatActivity {
                                         return c1.compareTo(c2);
                                     }
                                 });
-                                adapter = new MonthlyMenuCustomAdapter(progress);
-                                recyclerView.setAdapter(adapter);
+                                adapter.notifyDataSetChanged();
                             }
                         }
                     });
                     count++;
-
                 }
                 Log.e("timer","took :"+(Calendar.getInstance().getTimeInMillis()-start));
             }
         });
         t.start();
-
     }
 
     private String getEpisode(List<String> episodeList,String date){
@@ -363,8 +311,6 @@ public class MainActivity extends AppCompatActivity {
     }
     private Calendar getCalenderFromString(String date){
 
-
-
         try{
             date = date.trim().replaceAll("\\s{2,}", " ");
 
@@ -440,9 +386,17 @@ public class MainActivity extends AppCompatActivity {
             c.set(c.get(Calendar.YEAR),0,0);
             return c;
         }
-
     }
 
+    private void chromeTab(String url){
+        CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
+        intentBuilder.setStartAnimations(this,R.anim.slide_in_right , R.anim.slide_out_left);
+        intentBuilder.setExitAnimations(this, android.R.anim.slide_in_left, android.R.anim.slide_in_left);
+        intentBuilder.setToolbarColor(getResources().getColor(R.color.colorPrimary));
+        intentBuilder.addDefaultShareMenuItem();
+        CustomTabsIntent customTabsIntent = intentBuilder.build();
+        customTabsIntent.launchUrl(this, Uri.parse(url));
+    }
 
 }
 
